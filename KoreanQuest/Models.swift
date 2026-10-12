@@ -42,7 +42,8 @@ struct Question: Identifiable {
 
 enum QuestionFactory {
     /// 从本关题目里随机抽题，每题三选一干扰项 + 正确项，共四选一。
-    static func make(for lesson: Lesson, limit: Int = 12) -> [Question] {
+    /// limit 默认 16，比题池最大的关（16 题）不小，等于每局把整关考一遍。
+    static func make(for lesson: Lesson, limit: Int = 16) -> [Question] {
         var picked = lesson.items.shuffled()
         if picked.count > limit { picked = Array(picked.prefix(limit)) }
         let pool = Array(Set(lesson.items.map { $0.answer }))
