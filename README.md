@@ -59,9 +59,10 @@ korean-quest/
 ├── .github/workflows/build.yml        # CI：编译 + 打 ipa + 上传产物
 ├── KoreanQuest.xcodeproj/             # 已含共享 scheme
 └── KoreanQuest/
+    ├── Assets.xcassets/               # App 图标（绿底白色对话气泡 + 한，全套尺寸）
     ├── KoreanQuestApp.swift           # App 入口 + 底部两个 Tab
     ├── Models.swift                   # 数据模型 / 出题 / ProgressStore（JSON 持久化）
-    ├── LessonsData.swift              # 8 关全部题库
+    ├── LessonsData.swift              # 16 关全部题库（200 题）
     ├── Services.swift                 # 配色 / 音效 / 触感 / 朗读接口
     ├── MapView.swift                  # 关卡地图
     ├── PracticeView.swift             # 练习界面
