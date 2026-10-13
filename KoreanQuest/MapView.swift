@@ -2,7 +2,8 @@ import SwiftUI
 
 struct MapView: View {
     @EnvironmentObject var store: ProgressStore
-    @State private var active: Lesson?
+    @State private var teaching: Lesson?
+    @State private var practicing: Lesson?
 
     var body: some View {
         ScrollView {
@@ -14,13 +15,32 @@ struct MapView: View {
                 Text("每关正确率到 80% 才算过关，最高 3 颗星。")
                     .font(.system(size: 12))
                     .foregroundColor(KQ.sub)
+                Text("空心书本 = 这关的教学还没看，点关卡会先进教学；实心书本 = 已看过，随时点它复习。")
+                    .font(.system(size: 12))
+                    .foregroundColor(KQ.sub)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 2)
                     .padding(.top, 6)
             }
             .padding(.horizontal, 18)
             .padding(.bottom, 30)
         }
         .background(KQ.bg.ignoresSafeArea())
-        .fullScreenCover(item: $active) { lesson in
+        // 没看过教学的关卡：先教学，教学页点「开始练习」再进练习
+        .fullScreenCover(item: $teaching) { lesson in
+            LessonIntroView(
+                lesson: lesson,
+                onStart: {
+                    store.markTaught(lesson.id)
+                    teaching = nil
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+                        practicing = lesson
+                    }
+                },
+                onClose: { teaching = nil }
+            )
+        }
+        .fullScreenCover(item: $practicing) { lesson in
             PracticeView(lesson: lesson) { result in
                 store.finish(lesson: lesson,
                              accuracy: result.accuracy,
@@ -96,6 +116,19 @@ struct MapView: View {
                 }
             }
             Spacer(minLength: 0)
+
+            Button {
+                guard unlocked else { return }
+                SoundFX.tap()
+                teaching = lesson
+            } label: {
+                Image(systemName: store.hasTaught(lesson.id) ? "book.fill" : "book")
+                    .font(.system(size: 17, weight: .heavy))
+                    .foregroundColor(unlocked ? KQ.blue : KQ.locked)
+                    .frame(width: 38, height: 38)
+                    .background(Circle().fill(KQ.blue.opacity(unlocked ? 0.12 : 0.06)))
+            }
+            .buttonStyle(.plain)
         }
         .padding(12)
         .background(RoundedRectangle(cornerRadius: 18).fill(Color.white))
@@ -103,9 +136,13 @@ struct MapView: View {
         .opacity(unlocked ? 1 : 0.75)
         .contentShape(Rectangle())
         .onTapGesture {
-            if unlocked {
-                SoundFX.tap()
-                active = lesson
+            guard unlocked else { return }
+            SoundFX.tap()
+            // 看过教学就直接练，没看过先看教学
+            if store.hasTaught(lesson.id) {
+                practicing = lesson
+            } else {
+                teaching = lesson
             }
         }
     }

@@ -32,6 +32,28 @@ struct Lesson: Codable, Hashable, Identifiable {
     let items: [Item]
 }
 
+// MARK: - 教学
+
+/// 一关的教学卡片：一段讲解 + 若干可以点着听的示范
+struct TeachCard: Hashable, Identifiable {
+    var id: String { title }
+    let title: String
+    let body: String
+    var tip: String? = nil
+    var examples: [Word] = []
+}
+
+/// 一关的教学内容：一句话目标 + 若干张卡片
+struct LessonTeach {
+    let goal: String
+    let cards: [TeachCard]
+}
+
+extension Lesson {
+    /// 本关的教学（第 1～16 关都有）
+    var teach: LessonTeach? { Teach.data[id] }
+}
+
 // MARK: - 出题
 
 struct Question: Identifiable {
@@ -92,8 +114,11 @@ final class ProgressStore: ObservableObject {
     @Published private(set) var mistakes: [Mistake] = []
     @Published private(set) var streak: Int = 0
     @Published private(set) var lastDay: String = ""
+    /// 看过教学的关卡（看过的关再点就直接进练习）
+    @Published private(set) var taught: Set<Int> = []
 
     private let key = "kq.progress.v1"
+    private let taughtKey = "kq.taught.v1"
 
     private struct Snapshot: Codable {
         var stars: [String: Int] = [:]
@@ -102,7 +127,7 @@ final class ProgressStore: ObservableObject {
         var lastDay: String = ""
     }
 
-    init() { load() }
+    init() { load(); loadTaught() }
 
     // MARK: 查询
     func isUnlocked(_ id: Int) -> Bool {
@@ -113,6 +138,15 @@ final class ProgressStore: ObservableObject {
 
     var passedCount: Int { stars.count }
     var totalStars: Int { stars.values.reduce(0, +) }
+
+    // MARK: 教学
+    func hasTaught(_ id: Int) -> Bool { taught.contains(id) }
+
+    func markTaught(_ id: Int) {
+        guard !taught.contains(id) else { return }
+        taught.insert(id)
+        saveTaught()
+    }
 
     // MARK: 结算
     func finish(lesson: Lesson, accuracy: Double, correct: [Item], wrong: [Item]) {
@@ -150,7 +184,18 @@ final class ProgressStore: ObservableObject {
         mistakes = []
         streak = 0
         lastDay = ""
+        taught = []
+        UserDefaults.standard.removeObject(forKey: taughtKey)
         save()
+    }
+
+    private func loadTaught() {
+        let arr = UserDefaults.standard.array(forKey: taughtKey) as? [Int] ?? []
+        taught = Set(arr)
+    }
+
+    private func saveTaught() {
+        UserDefaults.standard.set(Array(taught).sorted(), forKey: taughtKey)
     }
 
     // MARK: 连续学习天数

@@ -52,7 +52,7 @@ struct ResultView: View {
                                     .font(.system(size: 14, weight: .heavy))
                                     .foregroundColor(KQ.red)
                                 Spacer(minLength: 0)
-                                Button { Speech.speak(it.korean) } label: {
+                                Button { Speech.speakKorean(it.korean) } label: {
                                     Image(systemName: "speaker.wave.1.fill")
                                         .foregroundColor(KQ.blue)
                                 }

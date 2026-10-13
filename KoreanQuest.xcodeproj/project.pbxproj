@@ -16,6 +16,9 @@
 		AA0000000000000000000007 /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000007 /* ResultView.swift */; };
 		AA0000000000000000000008 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000008 /* StatsView.swift */; };
 		AA0000000000000000000009 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000010 /* Assets.xcassets */; };
+		AA0000000000000000000010 /* Pronunciation.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000011 /* Pronunciation.swift */; };
+		AA0000000000000000000011 /* TeachData.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000012 /* TeachData.swift */; };
+		AA0000000000000000000012 /* LessonIntroView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0000000000000000000013 /* LessonIntroView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +31,9 @@
 		BB0000000000000000000007 /* ResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultView.swift; sourceTree = "<group>"; };
 		BB0000000000000000000008 /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
 		BB0000000000000000000010 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		BB0000000000000000000011 /* Pronunciation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pronunciation.swift; sourceTree = "<group>"; };
+		BB0000000000000000000012 /* TeachData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeachData.swift; sourceTree = "<group>"; };
+		BB0000000000000000000013 /* LessonIntroView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonIntroView.swift; sourceTree = "<group>"; };
 		BB0000000000000000000009 /* KoreanQuest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KoreanQuest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -57,7 +63,10 @@
 				BB0000000000000000000001 /* KoreanQuestApp.swift */,
 				BB0000000000000000000002 /* Models.swift */,
 				BB0000000000000000000003 /* LessonsData.swift */,
+				BB0000000000000000000012 /* TeachData.swift */,
+				BB0000000000000000000011 /* Pronunciation.swift */,
 				BB0000000000000000000004 /* Services.swift */,
+				BB0000000000000000000013 /* LessonIntroView.swift */,
 				BB0000000000000000000005 /* MapView.swift */,
 				BB0000000000000000000006 /* PracticeView.swift */,
 				BB0000000000000000000007 /* ResultView.swift */,
@@ -151,6 +160,9 @@
 				AA0000000000000000000006 /* PracticeView.swift in Sources */,
 				AA0000000000000000000007 /* ResultView.swift in Sources */,
 				AA0000000000000000000008 /* StatsView.swift in Sources */,
+				AA0000000000000000000010 /* Pronunciation.swift in Sources */,
+				AA0000000000000000000011 /* TeachData.swift in Sources */,
+				AA0000000000000000000012 /* LessonIntroView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

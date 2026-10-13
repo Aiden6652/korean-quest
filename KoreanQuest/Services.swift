@@ -17,6 +17,7 @@ enum KQ {
     static let bg = Color(red: 0.97, green: 0.98, blue: 0.98)
     static let ink = Color(red: 0.24, green: 0.28, blue: 0.33)
     static let sub = Color(red: 0.56, green: 0.60, blue: 0.65)
+    static let orange = Color(red: 1.00, green: 0.58, blue: 0.05)
 }
 
 // MARK: - 系统音效
@@ -48,6 +49,33 @@ final class SystemSpeech: SpeechProvider {
     static let shared = SystemSpeech()
     private let synth = AVSpeechSynthesizer()
     private var sessionReady = false
+    private var cachedVoice: AVSpeechSynthesisVoice?
+    private var didLookup = false
+
+    /// 设备上到底装没装韩语语音包。没装的话系统会拿默认语言（中文/英文）去念韩语，
+    /// 念出来的东西完全是另一回事，界面上必须提示用户去下载。
+    var koreanVoiceInstalled: Bool { resolveVoice() != nil }
+
+    var voiceDescription: String {
+        guard let v = resolveVoice() else { return "未安装韩语语音包" }
+        return "\(v.name)（\(v.language)）"
+    }
+
+    /// 从系统语音里挑一个韩语语音：音质高的优先，其次 ko-KR 本地化优先
+    private func resolveVoice() -> AVSpeechSynthesisVoice? {
+        if didLookup { return cachedVoice }
+        didLookup = true
+        let korean = AVSpeechSynthesisVoice.speechVoices().filter { $0.language.hasPrefix("ko") }
+        cachedVoice = korean.sorted { l, r in
+            let lq = Int(l.quality.rawValue)
+            let rq = Int(r.quality.rawValue)
+            if lq != rq { return lq > rq }
+            let lkr = (l.language == "ko-KR") ? 1 : 0
+            let rkr = (r.language == "ko-KR") ? 1 : 0
+            return lkr > rkr
+        }.first
+        return cachedVoice
+    }
 
     func speak(_ text: String) {
         if !sessionReady {
@@ -58,7 +86,9 @@ final class SystemSpeech: SpeechProvider {
         }
         synth.stopSpeaking(at: .immediate)
         let u = AVSpeechUtterance(string: text)
-        u.voice = AVSpeechSynthesisVoice(language: "ko-KR")
+        // 找不到韩语语音时 AVSpeechSynthesisVoice(language:) 会返回 nil，
+        // utterance.voice 置空会让系统用默认语言念——宁可保持 ko-KR 请求也不指定别的语种
+        u.voice = resolveVoice() ?? AVSpeechSynthesisVoice(language: "ko-KR")
         u.rate = 0.42
         u.pitchMultiplier = 1.0
         synth.speak(u)
@@ -72,6 +102,19 @@ final class SystemSpeech: SpeechProvider {
 /// final class DoubaoSpeech: SpeechProvider { ... }
 enum Speech {
     static var provider: SpeechProvider = SystemSpeech.shared
+
     static func speak(_ text: String) { provider.speak(text) }
     static func stop() { provider.stop() }
+
+    /// 念一个题目/单词：先过发音修正表，再交给语音源
+    static func speakKorean(_ korean: String) { provider.speak(Pronunciation.text(for: korean)) }
+
+    /// 韩语语音包是否可用（自定义语音源时按可用处理）
+    static var koreanVoiceInstalled: Bool {
+        (provider as? SystemSpeech)?.koreanVoiceInstalled ?? true
+    }
+
+    static var voiceDescription: String {
+        (provider as? SystemSpeech)?.voiceDescription ?? "自定义语音源"
+    }
 }

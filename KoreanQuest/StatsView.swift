@@ -3,6 +3,7 @@ import SwiftUI
 struct StatsView: View {
     @EnvironmentObject var store: ProgressStore
     @State private var showReset = false
+    @AppStorage("kq.autoSpeak.v1") private var autoSpeak = true
 
     var body: some View {
         ScrollView {
@@ -32,6 +33,8 @@ struct StatsView: View {
                 .overlay(RoundedRectangle(cornerRadius: 22).stroke(KQ.locked, lineWidth: 2))
 
                 mistakesCard
+
+                speechCard
 
                 Button { showReset = true } label: {
                     Text("清空所有进度")
@@ -96,7 +99,7 @@ struct StatsView: View {
                             .foregroundColor(KQ.red)
                             .lineLimit(1)
                         Spacer(minLength: 0)
-                        Button { Speech.speak(m.korean) } label: {
+                        Button { Speech.speakKorean(m.korean) } label: {
                             Image(systemName: "speaker.wave.1.fill")
                                 .foregroundColor(KQ.blue)
                         }
@@ -109,6 +112,61 @@ struct StatsView: View {
                     }
                     .padding(.vertical, 5)
                 }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(RoundedRectangle(cornerRadius: 22).fill(Color.white))
+        .overlay(RoundedRectangle(cornerRadius: 22).stroke(KQ.locked, lineWidth: 2))
+    }
+
+    private var speechCard: some View {
+        let ok = Speech.koreanVoiceInstalled
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("发音")
+                    .font(.system(size: 16, weight: .heavy))
+                    .foregroundColor(KQ.ink)
+                Spacer()
+                Text(ok ? "韩语语音已就绪" : "缺少韩语语音包")
+                    .font(.system(size: 13, weight: .heavy))
+                    .foregroundColor(ok ? KQ.green : KQ.orange)
+            }
+
+            Text("当前语音：\(Speech.voiceDescription)")
+                .font(.system(size: 13))
+                .foregroundColor(KQ.sub)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if !ok {
+                Text("系统没装韩语语音时会用中文／英文去念韩语，念出来完全是另一回事。到 设置 → 辅助功能 → 朗读内容 → 声音 → 韩语，下载任意一个即可。")
+                    .font(.system(size: 12))
+                    .foregroundColor(KQ.orange)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            HStack(spacing: 10) {
+                Button { Speech.speakKorean("안녕") } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "speaker.wave.2.fill")
+                            .font(.system(size: 12))
+                        Text("试听")
+                    }
+                    .font(.system(size: 14, weight: .heavy))
+                    .foregroundColor(KQ.blue)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(Capsule().fill(KQ.blue.opacity(0.12)))
+                }
+                .buttonStyle(.plain)
+
+                Spacer(minLength: 0)
+
+                Toggle("答题后自动朗读", isOn: $autoSpeak)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(KQ.ink)
+                    .tint(KQ.green)
+                    .fixedSize()
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

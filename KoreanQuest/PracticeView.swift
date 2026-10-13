@@ -6,6 +6,8 @@ struct PracticeView: View {
 
     @Environment(\.dismiss) private var dismiss
 
+    @AppStorage("kq.autoSpeak.v1") private var autoSpeak = true
+
     @State private var questions: [Question] = []
     @State private var index = 0
     @State private var picked: String? = nil
@@ -14,6 +16,7 @@ struct PracticeView: View {
     @State private var wrongItems: [Item] = []
     @State private var lives = 3
     @State private var result: SessionResult? = nil
+    @State private var showTeach = false
 
     private struct OptStyle {
         let fill: Color
@@ -35,11 +38,19 @@ struct PracticeView: View {
             }
         }
         .onAppear { if questions.isEmpty { restart() } }
+        .sheet(isPresented: $showTeach) {
+            LessonIntroView(lesson: lesson,
+                            onStart: { showTeach = false },
+                            onClose: { showTeach = false })
+        }
     }
 
     // MARK: - 练习主界面
 
     private var current: Question { questions[min(index, questions.count - 1)] }
+
+    /// TTS 真正念的东西（可能和字面写法不同）
+    private var spoken: String { Pronunciation.text(for: current.item.korean) }
 
     private var progress: Double {
         Double(index + (checked ? 1 : 0)) / Double(max(questions.count, 1))
@@ -72,6 +83,16 @@ struct PracticeView: View {
                     .font(.system(size: 18, weight: .heavy))
                     .foregroundColor(KQ.sub)
             }
+
+            Button {
+                SoundFX.tap()
+                showTeach = true
+            } label: {
+                Image(systemName: "book.fill")
+                    .font(.system(size: 16, weight: .heavy))
+                    .foregroundColor(KQ.blue)
+            }
+            .buttonStyle(.plain)
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
@@ -107,12 +128,19 @@ struct PracticeView: View {
                 .multilineTextAlignment(.center)
                 .foregroundColor(KQ.ink)
 
+            // 读的和写的不一样时（音变、缩写、单字母…）把实际读音标出来
+            if Pronunciation.differs(current.item.korean) {
+                Text(lesson.mode == .roman ? "实际读作 \(spoken)" : "读作 \(spoken)")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(KQ.orange)
+            }
+
             Button {
-                Speech.speak(current.item.korean)
+                Speech.speakKorean(current.item.korean)
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "speaker.wave.2.fill")
-                    Text("听发音")
+                    Text(Pronunciation.differs(current.item.korean) ? "听实际发音" : "听发音")
                 }
                 .font(.system(size: 14, weight: .heavy))
                 .foregroundColor(KQ.blue)
@@ -121,6 +149,14 @@ struct PracticeView: View {
                 .background(Capsule().fill(KQ.blue.opacity(0.12)))
             }
             .buttonStyle(.plain)
+
+            if !Speech.koreanVoiceInstalled {
+                Text("设备没装韩语语音包，发音会不准：设置 → 辅助功能 → 朗读内容 → 声音 → 韩语，下载一个")
+                    .font(.system(size: 12))
+                    .foregroundColor(KQ.orange)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 22)
@@ -204,7 +240,7 @@ struct PracticeView: View {
             if !current.item.words.isEmpty {
                 VStack(alignment: .leading, spacing: 7) {
                     ForEach(current.item.words) { w in
-                        Button { Speech.speak(w.korean) } label: {
+                        Button { Speech.speakKorean(w.korean) } label: {
                             HStack(spacing: 8) {
                                 Image(systemName: "speaker.wave.1.fill")
                                     .font(.system(size: 11))
@@ -278,6 +314,13 @@ struct PracticeView: View {
             lives -= 1
             SoundFX.wrong()
             Haptics.bad()
+        }
+        // 判完后念一遍实际发音，把「看到的」和「听到的」对上
+        let text = current.item.korean
+        if autoSpeak {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                Speech.speakKorean(text)
+            }
         }
     }
 
