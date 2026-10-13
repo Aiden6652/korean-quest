@@ -120,7 +120,7 @@ struct LessonIntroView: View {
                     .font(.system(size: 19, weight: .heavy))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical: 16)
+                    .padding(.vertical, 16)
                     .background(RoundedRectangle(cornerRadius: 16).fill(KQ.green))
                     .shadow(color: KQ.greenDark, radius: 0, x: 0, y: 4)
             }
