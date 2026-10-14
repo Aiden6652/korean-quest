@@ -85,6 +85,9 @@ enum VoiceGrade {
             return nil
         }
     }
+
+    /// 增强／高级版才算自然人声，标准版和没装都值得提示一下
+    var isNatural: Bool { self == .enhanced || self == .premium }
 }
 
 /// 默认实现：系统 TTS，韩语 ko-KR，不依赖任何外部音频文件。
@@ -115,7 +118,7 @@ final class SystemSpeech: SpeechProvider {
 
     var voiceDescription: String {
         guard let v = resolveVoice() else { return "未安装韩语语音包" }
-        return "\(v.name) · \(grade.text) · \(genderText(v))"
+        return "\(v.name) · \(grade.text) · \(SystemSpeech.genderText(v))"
     }
 
     /// 进度页的人声列表：音质好的排前面
@@ -217,10 +220,6 @@ final class SystemSpeech: SpeechProvider {
         u.voice = resolveVoice() ?? AVSpeechSynthesisVoice(language: "ko-KR")
         u.rate = Float(rate)
         u.pitchMultiplier = 1.0
-        // 不跟随「朗读内容」里为无障碍调的慢速设置，否则念出来更慢更机械
-        if #available(iOS 16.0, *) {
-            u.prefersAssistiveVoiceSettings = false
-        }
         synth.speak(u)
     }
 
