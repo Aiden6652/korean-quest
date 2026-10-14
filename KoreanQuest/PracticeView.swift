@@ -7,6 +7,8 @@ struct PracticeView: View {
     @Environment(\.dismiss) private var dismiss
 
     @AppStorage("kq.autoSpeak.v1") private var autoSpeak = true
+    @AppStorage("kq.voiceWarned.v1") private var voiceWarned = false
+    @State private var showVoiceAlert = false
 
     @State private var questions: [Question] = []
     @State private var index = 0
@@ -37,7 +39,19 @@ struct PracticeView: View {
                 playing
             }
         }
-        .onAppear { if questions.isEmpty { restart() } }
+        .onAppear {
+            if questions.isEmpty { restart() }
+            // 机械音／没装韩语语音包时，进来提醒一次怎么换人声
+            if !voiceWarned && !Speech.grade.isNatural {
+                voiceWarned = true
+                showVoiceAlert = true
+            }
+        }
+        .alert("朗读声音可以更好", isPresented: $showVoiceAlert) {
+            Button("知道了", role: .cancel) { }
+        } message: {
+            Text(Speech.grade.hint ?? "")
+        }
         .sheet(isPresented: $showTeach) {
             LessonIntroView(lesson: lesson,
                             onStart: { showTeach = false },

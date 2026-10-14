@@ -1,9 +1,12 @@
+import Foundation
 import SwiftUI
 
 struct StatsView: View {
     @EnvironmentObject var store: ProgressStore
     @State private var showReset = false
     @AppStorage("kq.autoSpeak.v1") private var autoSpeak = true
+    @AppStorage(Speech.voiceIdKey) private var voiceId = ""
+    @AppStorage(Speech.rateKey) private var rate = 0.5
 
     var body: some View {
         ScrollView {
@@ -121,28 +124,60 @@ struct StatsView: View {
     }
 
     private var speechCard: some View {
-        let ok = Speech.koreanVoiceInstalled
+        let grade = Speech.grade
         return VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("发音")
                     .font(.system(size: 16, weight: .heavy))
                     .foregroundColor(KQ.ink)
                 Spacer()
-                Text(ok ? "韩语语音已就绪" : "缺少韩语语音包")
+                Text(grade.text)
                     .font(.system(size: 13, weight: .heavy))
-                    .foregroundColor(ok ? KQ.green : KQ.orange)
+                    .foregroundColor(grade.isNatural ? KQ.green : KQ.orange)
             }
 
-            Text("当前语音：\(Speech.voiceDescription)")
+            Text("当前人声：\(Speech.voiceDescription)")
                 .font(.system(size: 13))
                 .foregroundColor(KQ.sub)
                 .fixedSize(horizontal: false, vertical: true)
 
-            if !ok {
-                Text("系统没装韩语语音时会用中文／英文去念韩语，念出来完全是另一回事。到 设置 → 辅助功能 → 朗读内容 → 声音 → 韩语，下载任意一个即可。")
+            if let hint = grade.hint {
+                Text(hint)
                     .font(.system(size: 12))
                     .foregroundColor(KQ.orange)
                     .fixedSize(horizontal: false, vertical: true)
+            }
+
+            if !Speech.voiceOptions.isEmpty {
+                Picker("人声", selection: $voiceId) {
+                    Text("自动（女声优先）").tag("")
+                    ForEach(Speech.voiceOptions) { v in
+                        Text(v.label).tag(v.id)
+                    }
+                }
+                .pickerStyle(.menu)
+                .tint(KQ.green)
+                .onChange(of: voiceId) { _ in
+                    Speech.reloadVoice()
+                    Speech.speakKorean("안녕")
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                HStack {
+                    Text("语速")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(KQ.ink)
+                    Spacer()
+                    Text(String(format: "%.2f", rate))
+                        .font(.system(size: 12))
+                        .foregroundColor(KQ.sub)
+                }
+                Slider(value: $rate, in: 0.35...0.62, step: 0.01)
+                    .tint(KQ.green)
+                Text("慢速听着最机械，一般 0.5 前后比较自然。")
+                    .font(.system(size: 11))
+                    .foregroundColor(KQ.sub)
             }
 
             HStack(spacing: 10) {
